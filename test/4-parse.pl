@@ -2,16 +2,14 @@
 use strict;
 use SVG::Parser;
 
-die "Usage: $0 <file>\n" unless @ARGV;
-
 my $xml;
 {
+    push @ARGV,"test/in/svg.xml";
     local $/=undef;
     $xml=<>;
 }
 
-my $parser=new SVG::Parser(-debug=>1,'--indent'=>'  ');
-
+my $parser=new SVG::Parser;
 my $svg=$parser->parse($xml);
 
-print $svg->xmlify();
+1;

@@ -1,0 +1,38 @@
+Revision history for Perl extension SVG::Parser.
+
+0.01  Mon Nov 19 10:39:21 2001
+	- original version; created by h2xs 1.20 with options
+		-n SVG::Parser
+
+0.80  Mon Nov 19 14:38:19 2001
+	- added documentation
+	- created some simple tests
+	- added an example script 'svgparse'
+
+0.85  Thu Nov 22
+	- added simple debugging support
+	- fully objectified the module
+	- even more documentation
+	- updated to use new features in SVG 2.0
+
+0.90  Sun Apr 21
+        - modified parser to use closures to maintain state
+        - renamed SVG::Parser to SVG::Parser::Expat
+        - added SVG::Parser::SAX for parsing with XML::SAX
+        - recreated SVG::Parser as generic interface to load either SVG::Parser::SAX or
+          SVG::Parser::Expat as applicable
+
+0.95  Thu Apr 25
+        - abstracted some common constants and debug to SVG::Parser::Base. Some of
+          these will move into SVG.pm in time.
+
+0.96  Sat Apr 27
+        - added improved import interface for selecting parser parent and grandparent
+          classes, both Expat and SAX.
+        - added 'Expat' and 'SAX' shorthand notations
+        - pass double-minused attriutes to SVG.pm constructor
+
+0.97  Mon Apr 29
+        - added parsefile/parse_file compatability method to SVG::Parser::Expat/SAX
+        - updated POD documentation
+        - expanded tests
