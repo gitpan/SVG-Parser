@@ -1,0 +1,13 @@
+SVG::Parser version 0.85
+22 November 2001
+
+SVG::Parser is an XML parser that converts SVG XML documents into SVG objects
+that may then be manipulated by the SVG module before being regenerated into XML.
+
+For documentation and examples, please see the POD documentation included with
+the module, and the examples directory.
+
+Copyright (c) 2001 Peter Wainwright, Cybrid Technology Ltd, peter@cybrid.net
+
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.

@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+use strict;
+
+use SVG::Parser;
+
+die "Usage: $0 <file ...>\n" unless @ARGV;
+
+my $xml=do {
+    local $/=undef;
+    <>;
+};
+
+my $parser=new SVG::Parser(-debug => 1);
+
+my $svg=$parser->parse($xml);
+
+print "-- in: original --\n";
+print $xml;
+print "-- out: as inline document fragment --\n";
+$svg->{-inline}=1;
+print $svg->xmlify();
+print "-- out: as stand-alone document --\n";
+$svg->{-inline}=0;
+print $svg->xmlify();
+print "-- done --\n";

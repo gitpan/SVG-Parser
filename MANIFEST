@@ -1,0 +1,10 @@
+Changes
+MANIFEST
+Makefile.PL
+Parser.pm
+README
+examples/svgparse
+test.pl
+test/2.pl
+test/3.pl
+test/in/svg.xml
