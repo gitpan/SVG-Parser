@@ -5,7 +5,7 @@ require 5.004;
 
 use vars qw(@ISA $VERSION);
 
-$VERSION="0.97";
+$VERSION="1.00";
 
 #-------------------------------------------------------------------------------
 # Pick a parser, any parser...
@@ -19,31 +19,29 @@ $VERSION="0.97";
 
 sub import {
     my $package=shift;
-    my @importlist;
 
     @ISA=@_ if @_;
+    my @classes;
 
-    foreach my $superclass (@ISA) {
+    foreach my $superclassspec (@ISA) {
         # extract parameters to pass to superclass import method if present
-        if ($superclass=~/^([^=]+)=(.*)+$/) {
-            ($superclass,@importlist)=split /=/,$superclass;
-        } else {
-            @importlist=();
-	}
+        my ($superclass,$importlist)=split /=/,$superclassspec,2;
+        my @importlist=(split '=',$importlist);
 
         # shorthand shortcuts
         $superclass="SVG::Parser::SAX" if $superclass eq 'SAX';
         $superclass="SVG::Parser::Expat" if $superclass eq 'Expat';
 
         # test each superclass specifier in turn
-        @ISA = ($superclass),return if eval qq[
-	    require $superclass;
-            import $superclass qw(@importlist); #may die
-            1;
-        ];
+        if (eval qq[use $superclass qw(@importlist); 1;]) {
+            @ISA = ($superclass);
+            return;
+	}
+
+        push @classes,"$superclass qw(",(join " ",@importlist),")";
     }
 
-    die "No XML parser found - one of XML::SAX or XML::Parser must be installed\n";
+    die "No XML parser found (searched for ",(join ",",@classes),")\n";
 }
 
 #-------------------------------------------------------------------------------
@@ -163,8 +161,8 @@ the SVG object returned as the result of the parse:
 
    my $parser=new SVG::Parser(
 	-debug => 1,
-	--indent => "\t",
-        --raiseerror => 1
+	"--indent" => "\t",
+        "--raiseerror" => 1
    );
 
 The leading '-' is stripped from attribute names passed this way, so this sets
@@ -242,7 +240,7 @@ use either of:
     use SVG::Parser qw(SVG::Parser::Expat SVG::Parser::SAX);
     use SVG::Parser qw(Expat SAX);
 
-To use Expat with an specific XML::Parser subclass:
+To use Expat with a specific XML::Parser subclass:
 
     use SVG::Parser qw(SVG::Parser::Expat=My::XML::Parser::Subclass);
 
@@ -286,7 +284,7 @@ Similarly, from the command line:
 =head2 EXAMPLES
 
 See C<svgparse>, C<svgparse2>, and C<svgparse3> in the examples directory of the
-distribution, plus C<svgexpatparse> and C<svgsaxparser> for examples of using
+distribution, along with C<svgexpatparse> and C<svgsaxparse> for examples of using
 the SVG::Parser::Expat and SVG::Parser::SAX modules directly.
 
 =head1 AUTHOR

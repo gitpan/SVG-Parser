@@ -11,7 +11,7 @@ use SVG::Parser::SAX::Handler;
 use vars qw(@ISA $VERSION);
 @ISA=qw(SVG::Parser::Base); # this changes once the parser type is known
 
-$VERSION="0.97";
+$VERSION="1.00";
 
 #-------------------------------------------------------------------------------
 
@@ -91,8 +91,9 @@ sub new {
     my $class=ref($proto) || $proto;
     my %attrs=@_;
 
+    my $handler=SVG::Parser::SAX::Handler->new(%attrs);
     my $self=XML::SAX::ParserFactory->parser(
-        Handler => SVG::Parser::SAX::Handler->new(%attrs),
+        Handler => $handler,
     );
 
     # first time through set up the @ISA for the package
@@ -114,11 +115,13 @@ sub import {
         # select specific XML::SAX parser: 'pkg' or 'pkg => version'
         if ($version) {
             $XML::SAX::ParserPackage="$superclass ($version)" if eval qq[
-                require $superclass $version;
+                use $superclass $version;
+                1;
             ];
         } else {
             $XML::SAX::ParserPackage=$superclass if eval qq[
-                require $superclass;
+                use $superclass;
+                1;
             ];
         }
     }

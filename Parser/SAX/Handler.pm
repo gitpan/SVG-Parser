@@ -8,7 +8,7 @@ use base qw(XML::SAX::Base SVG::Parser::Base);
 use SVG::Parser::Base;
 use SVG 2.0;
 
-$VERSION="0.97";
+$VERSION="1.00";
 
 #-------------------------------------------------------------------------------
 
@@ -41,87 +41,56 @@ sub new {
 
 sub start_document {
     my ($self,$document)=@_;
-
-    # gather SVG constuctor attributes
-    my %svg_attr;
-    %svg_attr=%{delete $self->{__svg_attr}} if exists $self->{__svg_attr};
-    $svg_attr{-nostub}=1;
-    # instantiate SVG document object
-    $self->{__svg}=new SVG(%svg_attr);
-    # empty element list
-    $self->{__elements}=[];
-
-    $self->debug("Start",$self."/".$self->{__svg});
+    return $self->SVG::Parser::Base::StartDocument();
 }
 
 sub start_element {
     my ($self,$element)=@_;
 
-    my $elements=$self->{__elements};
-    my $svg=$self->{__svg};
-  
     my $name=$element->{Name};
     my %attrs=map {
 	$element->{Attributes}{$_}{Name} => $element->{Attributes}{$_}{Value}
     } keys %{$element->{Attributes}};
 
-    if (@$elements) {
-        my $parent=$elements->[-1];
-        push @$elements, $parent->element($name,%attrs);
-    } else {
-        $svg->{-inline}=1 if $name ne "svg"; #inlined
-        my $el=$svg->element($name,%attrs);
-        $svg->{-document} = $el;
-        push @$elements, $el;
-    }
-
-    $self->debug("Element",$name);
+    $self->SVG::Parser::Base::StartTag($name,%attrs);
 }
 
 sub end_element {
     my ($self,$element)=@_;
-    my $elements=$self->{__elements};
-    pop @$elements;
+    return $self->SVG::Parser::Base::EndTag($element);
 }
 
 sub characters {
     my ($self,$text)=@_;
-    my $elements=$self->{__elements};
+    return $self->SVG::Parser::Base::Text($text->{Data});
+}
 
-    return if $text->{Data}=~/^\s*$/s; #ignore redundant whitespace
-    my $parent=$elements->[-1];
-    $parent->cdata($text->{Data});
+sub start_cdata {
+    my $self=shift;
+    return $self->SVG::Parser::Base::CdataStart();
+}
 
-    $self->debug("CDATA",qq/"$text->{Data}"/);
+sub end_cdata {
+    my $self=shift;
+    return $self->SVG::Parser::Base::CdataEnd();
 }
 
 sub processing_instruction {
     my ($self,$pi)=@_;
-    my $elements=$self->{__elements};
-
-    my $parent=$elements->[-1];
-    $parent->pi("$pi->{Target} $pi->{Data}");
-
-    $self->debug("PI","$pi->{Target} $pi->{Data}");
+    return $self->SVG::Parser::Base::PI(
+        $pi->{Target},
+        $pi->{Data}
+    );
 }
 
-# handle XML Comments
 sub comment {
     my ($self,$comment)=@_;
-
-    my $elements=$self->{__elements};
-    my $parent=$elements->[-1];
-
-    $parent->comment($comment->{Data});
-    $self->debug("Comment",$comment->{Data});
+    return $self->SVG::Parser::Base::Comment($comment->{Data});
 }
 
 sub end_document {
     my ($self,$document)=@_;
-
-    $self->debug("Done");
-
-    return $self->{__svg};
+    return $self->SVG::Parser::Base::FinishDocument();
 }
 
 #-------------------------------------------------------------------------------
@@ -129,31 +98,88 @@ sub end_document {
 # handle XML declaration, if present
 sub xml_decl {
     my ($self,$decl)=@_;
-    my $svg=$self->{__svg};
 
-    $svg->{-version}=$decl->{Version} || $self->SVG_DEFAULT_DECL_VERSION;
-    $svg->{-encoding}=$decl->{Encoding} || $self->SVG_DEFAULT_DECL_ENCODING;
-    $svg->{-standalone}=$decl->{Standalone} || $self->SVG_DEFAULT_DECL_STANDALONE;
-   
-    $self->debug("XMLDecl","-version=\"$svg->{-version}\"",
-        "-encoding=\"$svg->{-encoding}\"","-standalone=\"$svg->{-standalone}\"");
+    $self->SVG::Parser::Base::XMLDecl(
+        $decl->{Version},
+        $decl->{Encoding},
+        $decl->{Standalone}
+    );
 }
 
 # handle Doctype declaration, if present (and if parser handles it)
 sub doctype_decl {
     my ($self,$dtd)=@_;
-    my $svg=$self->{__svg};
 
-    $svg->{-docroot}=$dtd->{Name} || $self->SVG_DEFAULT_DOCTYPE_NAME;
-    $svg->{-sysid}=$dtd->{SystemId} || $self->SVG_DEFAULT_DOCTYPE_SYSID;
-    $svg->{-pubid}=$dtd->{PublicId} || $self->SVG_DEFAULT_DOCTYPE_PUBID;
-    $svg->{-internal}=$dtd->{Internal};
+    $self->SVG::Parser::Base::Doctype(
+        $dtd->{Name},
+        $dtd->{SystemId},
+        $dtd->{PublicId},
+        $dtd->{Internal}
+    );
+}
 
-    $self->debug("Doctype",
-        "-docroot=\"$svg->{-docroot}\"",
-        "-sysid=\"$svg->{-sysid}\"",
-        "-pubid=\"$svg->{-pubid}\"",
-        "-internal=\"$svg->{-internal}\""
+#-------------------------------------------------------------------------------
+
+sub entity_decl {
+    my ($self,$edecl)=@_;
+
+    if (defined $edecl->{Notation}) {
+        # unparsed entity decl
+        $self->SVG::Parser::Base::Unparsed(
+            $edecl->{Name},
+            $edecl->{Value},
+            $edecl->{SystemID},
+            $edecl->{PublicID},
+            $edecl->{Notation},
+            0,
+        );
+    } else {
+        # internal/external entity decl
+        my $isp=0;
+        if (defined $edecl->{Name}) {
+            $isp=1 if $edecl->{Name} =~ s/^%//;
+        }
+    
+        $self->SVG::Parser::Base::Entity(
+            $edecl->{Name},
+            $edecl->{Value},
+            $edecl->{SystemID},
+            $edecl->{PublicID},
+            $edecl->{Notation},
+            $isp
+        );
+    }
+}
+
+sub notation_decl { 
+    my ($self,$ndecl)=@_;
+
+    $self->SVG::Parser::Base::Notation(
+        $ndecl->{Name},
+        $ndecl->{Base},
+        $ndecl->{SystemID},
+        $ndecl->{PublicID},
+    );
+}
+
+sub element_decl {
+    my ($self,$edecl)=@_;
+
+    $self->SVG::Parser::Base::Element(
+        $edecl->{Name},
+        $edecl->{Model}
+    );
+}
+
+sub attribute_decl {
+    my ($self,$adecl)=@_;
+
+    $self->SVG::Parser::Base::Attlist(
+        $adecl->{eName},
+        $adecl->{aName},
+        $adecl->{Type},
+        (defined($adecl->{Value}) ? $adecl->{Value} : $adecl->{Mode}),
+        ((defined($adecl->{Mode}) and $adecl->{Mode} eq '#FIXED')?1:0),
     );
 }
 

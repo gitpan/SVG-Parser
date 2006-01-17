@@ -7,8 +7,7 @@ use base qw(XML::Parser SVG::Parser::Base);
 use SVG 2.0;
 
 use vars qw($VERSION @ISA);
-
-$VERSION="0.97";
+$VERSION="1.00";
 
 #---------------------------------------------------------------------------------------
 
@@ -103,16 +102,24 @@ sub new {
 
     my $parser=$class->SUPER::new(%parser_attrs);
     $parser->setHandlers(
-        XMLDecl => sub { XMLDecl($parser, @_) },
-        Doctype => sub { Doctype($parser, @_) },
-        Init    => sub { StartDocument($parser, @_) },
-        Final   => sub { FinishDocument($parser, @_) },
+        XMLDecl    => sub { XMLDecl($parser, @_) },
+        Doctype    => sub { Doctype($parser, @_) },
+        Init       => sub { StartDocument($parser, @_) },
+        Final      => sub { FinishDocument($parser, @_) },
 
-        Start   => sub { StartTag($parser, @_) },
-        End     => sub { EndTag($parser, @_) },
-        Char    => sub { Text($parser, @_) },
-        Proc    => sub { PI($parser, @_) },
-        Comment => sub { Comment($parser, @_) },
+        Start      => sub { StartTag($parser, @_) },
+        End        => sub { EndTag($parser, @_) },
+        Char       => sub { Text($parser, @_) },
+        CdataStart => sub { $parser->SVG::Parser::Base::CdataStart(@_) },
+        CdataEnd   => sub { $parser->SVG::Parser::Base::CdataEnd(@_) },
+        Proc       => sub { PI($parser, @_) },
+        Comment    => sub { Comment($parser, @_) },
+
+	Unparsed   => sub { Unparsed($parser, @_) },
+        Notation   => sub { Notation($parser,@_) },
+        Entity     => sub { Entity($parser, @_) },
+	Element    => sub { Element($parser,@_) },
+        Attlist    => sub { Attlist($parser,@_) },
     );
 
     # minus-prefixed attributes stay here, double-minus to SVG object
@@ -136,13 +143,13 @@ sub import {
     # permit an alternative XML::Parser subclass to be our parent class
     if (@_) {
         my $superclass=shift;
- 
-        $ISA[0]=$superclass,return if eval qq[
-            require $superclass;
-            import $superclass qw(@_);
-        ];        
 
-        die "Parent parser class $superclass not found\n";
+        $ISA[0]=$superclass,return if eval qq[
+            use $superclass qw(@_);
+            1;
+        ];
+
+        die "Parent parser class $superclass not found: $@\n";
     }
 }
 
@@ -151,88 +158,44 @@ sub import {
 
 # create and set SVG document object as root element
 sub StartDocument {
-    my $parser=shift;
-
-    # gather SVG constuctor attributes
-    my %svg_attr;
-    %svg_attr=%{delete $parser->{__svg_attr}} if exists $parser->{__svg_attr};
-    $svg_attr{-nostub}=1;
-    # instantiate SVG document object
-    $parser->{__svg}=new SVG(%svg_attr);
-    # empty element list
-    $parser->{__elements}=[]; 
-
-    $parser->debug("Start",$parser."/".$parser->{__svg});
+    my ($parser,$expat)=@_;
+    return $parser->SVG::Parser::Base::StartDocument();
 }
 
 # handle start of element - extend chain by one
 sub StartTag {
     my ($parser,$expat,$type,%attrs)=@_;
-    my $elements=$parser->{__elements};
-    my $svg=$parser->{__svg};
-
-    if (@$elements) {
-        my $parent=$elements->[-1];
-        push @$elements, $parent->element($type,%attrs);
-    } else {
-        $svg->{-inline}=1 if $type ne "svg"; #inlined
-        my $el=$svg->element($type,%attrs);
-        $svg->{-document} = $el;
-        push @$elements, $el;
-    }
-
-    $parser->debug("Element",$type);
+    return $parser->SVG::Parser::Base::StartTag($type,%attrs);
 }
 
 # handle end of element - shorten chain by one
 sub EndTag {
     my ($parser,$expat,$type)=@_;
-    my $elements=$parser->{__elements};
-    pop @$elements;
+    return $parser->SVG::Parser::Base::EndTag($type);
 }
 
 # handle cannonical data (text)
 sub Text {
     my ($parser,$expat,$text)=@_;
-    my $elements=$parser->{__elements};
-
-    return if $text=~/^\s*$/s; #ignore redundant whitespace
-    my $parent=$elements->[-1];
-    $parent->cdata($text);
-
-    $parser->debug("CDATA","\"$text\"");
+    return $parser->SVG::Parser::Base::Text($text);
 }
 
 # handle processing instructions
 sub PI {
     my ($parser,$expat,$target,$data)=@_;
-    my $elements=$parser->{__elements};
-
-    my $parent=$elements->[-1];
-    /^<\?(.*)\?>/;
-    $parent->pi($1);
-
-    $parser->debug("PI",$_);
+    return $parser->SVG::Parser::Base::PI($target,$data);
 }
 
 # handle XML Comments
 sub Comment {
     my ($parser,$expat,$data)=@_;
-
-    my $elements=$parser->{__elements};
-    my $parent=$elements->[-1];
-    $parent->comment($data);
-
-    $parser->debug("Comment",$data);
+    return $parser->SVG::Parser::Base::Comment($data);
 }
 
 # return root SVG document object as result of parse()
 sub FinishDocument {
-    my $parser=shift;
-
-    $parser->debug("Done");
-
-    return $parser->{__svg};
+    my ($parser,$expat)=@_;
+    return $parser->SVG::Parser::Base::FinishDocument();
 }
 
 #---------------------------------------------------------------------------------------
@@ -240,32 +203,45 @@ sub FinishDocument {
 # handle XML declaration, if present
 sub XMLDecl {
     my ($parser,$expat,$version,$encoding,$standalone)=@_;
-    my $svg=$parser->{__svg};
-
-    $svg->{-version}=$version || $parser->SVG_DEFAULT_DECL_VERSION;
-    $svg->{-encoding}=$encoding || $parser->SVG_DEFAULT_DECL_ENCODING;
-    $svg->{-standalone}=$standalone?"yes":"no";
-
-    $parser->debug("XMLDecl","-version=\"$svg->{-version}\"",
-	"-encoding=\"$svg->{-encoding}\"","-standalone=\"$svg->{-standalone}\"");
+    return $parser->SVG::Parser::Base::XMLDecl($version,$encoding,$standalone);
 }
 
 # handle Doctype declaration, if present
 sub Doctype {
     my ($parser,$expat,$name,$sysid,$pubid,$internal)=@_;
-    my $svg=$parser->{__svg};
+    return $parser->SVG::Parser::Base::Doctype($name,$sysid,$pubid,$internal);
+}
 
-    $svg->{-docroot}=$name || $parser->SVG_DEFAULT_DOCTYPE_NAME;
-    $svg->{-sysid}=$sysid || $parser->SVG_DEFAULT_DOCTYPE_SYSID;
-    $svg->{-pubid}=$pubid || $parser->SVG_DEFAULT_DOCTYPE_PUBID;
-    $svg->{-internal}=$internal?"yes":"no"; # this needs further work...
+#---------------------------------------------------------------------------------------
 
-    $parser->debug("Doctype",
-        "-docroot=\"$svg->{-docroot}\"",
-        "-sysid=\"$svg->{-sysid}\"",
-	"-pubid=\"$svg->{-pubid}\"",
-        "-internal=\"$svg->{-internal}\""
-    );
+# Unparsed (Expat, Entity, Base, Sysid, Pubid, Notation)
+sub Unparsed {
+    my ($parser,$expat,$name,$base,$sysid,$pubid,$notation)=@_;
+    return $parser->SVG::Parser::Base::Unparsed($name,$base,$sysid,$pubid,$notation);
+}
+
+# Notation (Expat, Notation, Base, Sysid, Pubid)
+sub Notation {
+    my ($parser,$expat,$name,$base,$sysid,$pubid)=@_;
+    return $parser->SVG::Parser::Base::Notation($name,$base,$sysid,$pubid);
+}
+
+# Entity (Expat, Name, Val, Sysid, Pubid, Ndata, IsParam)
+sub Entity {
+    my ($parser,$expat,$name,$val,$sysid,$pubid,$data,$isp)=@_;
+    return $parser->SVG::Parser::Base::Entity($name,$val,$sysid,$pubid,$data,$isp);
+}
+
+# Element (Expat, Name, Model)
+sub Element {
+    my ($parser,$expat,$name,$model)=@_;
+    return $parser->SVG::Parser::Base::Element($name,$model);
+}
+
+# Attlist (Expat, Elname, Attname, Type, Default, Fixed)
+sub Attlist {
+    my ($parser,$expat,$name,$attr,$type,$default,$fixed)=@_;
+    return $parser->SVG::Parser::Base::Attlist($name,$attr,$type,$default,$fixed);
 }
 
 #---------------------------------------------------------------------------------------
@@ -276,6 +252,5 @@ sub parse_file {
 }
 
 #---------------------------------------------------------------------------------------
-
 
 1;
