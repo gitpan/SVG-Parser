@@ -1,5 +1,9 @@
 Revision history for Perl extension SVG::Parser.
 
+1.01   Sun Mar 12 2006
+        - minor tweaks to handling of import lists for inheritance control
+        - eliminate some warnings from test suite in some circumstances
+
 1.00   Mon Jan 16 2006
         - improve handling of passed arguments to ancestor parser classes
         - cleared up some messages and documentation

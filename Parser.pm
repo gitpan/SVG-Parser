@@ -5,7 +5,7 @@ require 5.004;
 
 use vars qw(@ISA $VERSION);
 
-$VERSION="1.00";
+$VERSION="1.01";
 
 #-------------------------------------------------------------------------------
 # Pick a parser, any parser...
@@ -26,7 +26,7 @@ sub import {
     foreach my $superclassspec (@ISA) {
         # extract parameters to pass to superclass import method if present
         my ($superclass,$importlist)=split /=/,$superclassspec,2;
-        my @importlist=(split '=',$importlist);
+        my @importlist=$importlist ? (split '=',$importlist) : ();
 
         # shorthand shortcuts
         $superclass="SVG::Parser::SAX" if $superclass eq 'SAX';

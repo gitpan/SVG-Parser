@@ -1,10 +1,12 @@
-SVG::Parser version 1.00
-16 January 2006
+SVG::Parser version 1.01
+12 March 2006
 
 SVG::Parser is an XML parser that converts SVG XML documents into SVG objects
 that may then be manipulated by the SVG module before being regenerated into
 XML.  It will work using any installed Expat or SAX parser, and may be given
 preferred list of parsers to try; the first to load successfully will be used.
+For more advanced uses, any custom Expat or SAX parser class can also be
+provided as the superclass XML parser for SVG::Parser.
 
 For documentation and examples, please see the POD documentation included with
 the module, and the examples directory.
