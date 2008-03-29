@@ -1,5 +1,5 @@
-SVG::Parser version 1.01
-12 March 2006
+SVG::Parser version 1.02
+28 March 2008
 
 SVG::Parser is an XML parser that converts SVG XML documents into SVG objects
 that may then be manipulated by the SVG module before being regenerated into

@@ -5,7 +5,7 @@ require 5.004;
 
 use vars qw(@ISA $VERSION);
 
-$VERSION="1.01";
+$VERSION="1.02";
 
 #-------------------------------------------------------------------------------
 # Pick a parser, any parser...
@@ -169,9 +169,8 @@ The leading '-' is stripped from attribute names passed this way, so this sets
 the '-indent' and '-raiseerror' attributes in the SVG module. See L<SVG> for a
 list of valid SVG options.
 
-I<Note: technically the new() constructor is provided by either XML::SAX::Expat
-or SVG::Parser::SAX, not SVG::Parser itself. However, it operates identically
-in either case.>
+(The C<new> constructor is provided by XML::SAX::Expat or SVG::Parser::SAX,
+but operates identically in either case.)
 
 =item * parse($xml)
 
@@ -209,8 +208,8 @@ Both methods will work equally well whichever parent parser class is in use:
     my $svg=$parser->parsefile(*SVGIN);
     ...etc...
 
-These methods will also work when using SVG::Parser::Expat or SVG::Parser::SAX
-directly.
+(These methods will also work when using SVG::Parser::Expat or SVG::Parser::SAX
+directly.)
 
 =back
 
@@ -251,7 +250,6 @@ To use SAX with the XML::LibXML SAX parser:
 A number of specifications can be listed to have SVG::Parse try a number of
 possible parser alternatives in decreasing order of preference:
 
-
     use SVG::Parser qw(
         SAX=My::SAXParser
         Expat=My::Best::ExpatParser
@@ -261,7 +259,7 @@ possible parser alternatives in decreasing order of preference:
         SAX
     )
 
-This also works from the command line. For example:
+You can test different scenarios from the command line. For example:
 
     perl -MSVG::Parser=SAX mysvgapp.pl
     perl -MSVG::Parser=Expat,SAX mysvgapp.pl

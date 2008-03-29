@@ -7,7 +7,7 @@ use base qw(XML::Parser SVG::Parser::Base);
 use SVG 2.0;
 
 use vars qw($VERSION @ISA);
-$VERSION="1.01";
+$VERSION="1.02";
 
 #---------------------------------------------------------------------------------------
 

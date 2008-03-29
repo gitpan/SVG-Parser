@@ -1,11 +1,32 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         SVG-Parser
-version:      1.01
-version_from: Parser.pm
-installdirs:  site
+---
+name: SVG-Parser
+version: 1.02
+author:
+  - 'Peter Wainwright, peter.wainwright@cybrid.net'
+abstract: XML Parser for SVG documents
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
-    SVG:                           2
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+  SVG: 2
+  XML::SAX: ~
+provides:
+  SVG::Parser:
+    file: lib/SVG/Parser.pm
+    version: 1.02
+  SVG::Parser::Base:
+    file: lib/SVG/Parser/Base.pm
+    version: 1.02
+  SVG::Parser::Expat:
+    file: lib/SVG/Parser/Expat.pm
+    version: 1.02
+  SVG::Parser::SAX:
+    file: lib/SVG/Parser/SAX.pm
+    version: 1.02
+  SVG::Parser::SAX::Handler:
+    file: lib/SVG/Parser/SAX/Handler.pm
+    version: 1.02
+generated_by: Module::Build version 0.2808
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

@@ -8,7 +8,7 @@ use base qw(XML::SAX::Base SVG::Parser::Base);
 use SVG::Parser::Base;
 use SVG 2.0;
 
-$VERSION="1.00";
+$VERSION="1.02";
 
 #-------------------------------------------------------------------------------
 
