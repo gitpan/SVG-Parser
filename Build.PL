@@ -12,9 +12,9 @@ sub required_parser {
   my @parser;
 
   eval { require XML::Parser };
-  push @parser,'XML::Parser' if $INC{"XML/Parser.pm"}; 
+  push @parser,'XML::Parser',0 if $INC{"XML/Parser.pm"}; 
   eval { require XML::SAX };
-  push @parser,'XML::SAX' if $INC{"XML/SAX.pm"};
+  push @parser,'XML::SAX',0 if $INC{"XML/SAX.pm"};
 
   print "------------------------------------------------------\n";
   if (@parser) {

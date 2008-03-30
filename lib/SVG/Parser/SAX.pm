@@ -11,7 +11,7 @@ use SVG::Parser::SAX::Handler;
 use vars qw(@ISA $VERSION);
 @ISA=qw(SVG::Parser::Base); # this changes once the parser type is known
 
-$VERSION="1.02";
+$VERSION="1.03";
 
 #-------------------------------------------------------------------------------
 

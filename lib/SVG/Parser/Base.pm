@@ -2,7 +2,7 @@ package SVG::Parser::Base;
 use strict;
 
 use vars qw($VERSION);
-$VERSION="1.02";
+$VERSION="1.03";
 
 #-------------------------------------------------------------------------------
 

@@ -1,9 +1,11 @@
 Revision history for Perl extension SVG::Parser.
 
+1.03   Sun Mar 30 2008
+         - convert to Build.PL (Module::Build)
+
 1.02   Sat Mar 29 2008
          - change installation to force a dependency on XML::SAX if neither
            of XML::Parser or XML::SAX are present on the system       
-         - convert to Build.PL (Module::Build)
          - minor documentation cleanup
  
 1.01   Sun Mar 12 2006

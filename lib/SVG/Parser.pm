@@ -5,7 +5,7 @@ require 5.004;
 
 use vars qw(@ISA $VERSION);
 
-$VERSION="1.02";
+$VERSION="1.03";
 
 #-------------------------------------------------------------------------------
 # Pick a parser, any parser...
